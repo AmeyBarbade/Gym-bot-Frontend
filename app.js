@@ -184,10 +184,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyContainer = document.getElementById('workout-history-container');
 
     async function loadHistory() {
-        historyContainer.innerHTML = '<p class="loading-text">Loading past workouts...</p>';
+        historyContainer.innerHTML = '<p class="loading-text">Waking up server & loading past workouts...</p>';
 
         try {
+            // FIX: The exact URL with the /api/get-workouts endpoint included
             const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/get-workouts');
+            
+            // If the server is asleep (or sends an HTML page), throw an error to trigger a retry
+            if (!response.ok) {
+                throw new Error("Server not ready or endpoint missing");
+            }
+
             const sessions = await response.json();
 
             if (sessions.length === 0) {
@@ -195,27 +202,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Clear the container
-            historyContainer.innerHTML = '';
+            historyContainer.innerHTML = ''; // Clear loading text
 
-            // Loop through each session and build a card
             sessions.forEach(session => {
-                // Format the date nicely (e.g., "March 4, 2026 - 06:30 PM")
                 const dateObj = new Date(session.date);
                 const dateString = dateObj.toLocaleDateString() + ' - ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                // Start building the HTML for this card
                 let cardHTML = `
                     <div class="history-card">
                         <h3>${dateString}</h3>
                         <ul class="history-logs">
                 `;
 
-                // Loop through the specific sets in this session
                 session.logs.forEach(log => {
-                    // Replace underscores with spaces for the machine name (e.g., "bench_press" -> "bench press")
                     const cleanMachineName = log.machine.replace('_', ' '); 
-                    
                     cardHTML += `
                         <li>
                             <span class="machine-name">${cleanMachineName} (Set ${log.set})</span>
@@ -225,14 +225,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 cardHTML += `</ul></div>`;
-                
-                // Inject the finished card into the container
                 historyContainer.innerHTML += cardHTML;
             });
 
         } catch (error) {
             console.error("Error loading history:", error);
-            historyContainer.innerHTML = '<p class="loading-text">Failed to load workouts. Is the server running?</p>';
+            // Auto-retry in 5 seconds if it fails
+            setTimeout(loadHistory, 5000);
         }
     }
 
@@ -240,7 +239,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // const machineSelect = document.getElementById('machine-select');
     // const muscleSelect = document.getElementById('muscle-select'); // Ensure this is selected at the top of your file
     
-    // Global array to hold exercises so we can filter them
     let allExercises = [];
 
     // 1. Fetch exercises from DB
