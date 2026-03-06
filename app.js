@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Send the data to your Node.js server
-            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com', {
+            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/save-workout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         historyContainer.innerHTML = '<p class="loading-text">Loading past workouts...</p>';
 
         try {
-            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com');
+            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/get-workouts');
             const sessions = await response.json();
 
             if (sessions.length === 0) {
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Fetch exercises from DB
     async function loadExercises() {
         try {
-            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com');
+            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/get-exercises');
             allExercises = await response.json();
         } catch (error) {
             console.error("Error loading exercises:", error);
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com', {
+            const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/add-exercise', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ muscle, machine })
