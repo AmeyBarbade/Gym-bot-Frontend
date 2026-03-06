@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gym Bot</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main id="app-content">
+        <section id="workout-view" class="active-view">
+            <h2>Log Your Sets</h2>
+            
+            <div class="selection-group">
+                <select id="muscle-select">
+                    <option value="chest">Chest</option>
+                    <option value="back">Back</option>
+                    <option value="legs">Legs</option>
+                    <option value="shoulders">Shoulders</option>
+                    <option value="arms">Biceps</option>
+                    <option value="arms">Triceps</option>
+                    <option value="core">Core</option>
+                </select>
+                <select id="machine-select">
+                    <option value="">Select Machine...</option>
+                </select>
+            </div>
+
+            <div class="sets-container">
+                <div class="set-tabs">
+                    <button class="set-tab active-set" data-set="1">1</button>
+                    <button class="set-tab" data-set="2">2</button>
+                    <button class="set-tab" data-set="3">3</button>
+                    <button class="set-tab" data-set="4">4</button>
+                    <button class="set-tab" data-set="5">5</button>
+                </div>
+                
+                <div class="set-inputs">
+                    <div class="input-row">
+                        <label>Weight (kg)</label>
+                        <input type="number" id="weight-input" placeholder="e.g. 60">
+                    </div>
+                    <div class="input-row">
+                        <label>Reps</label>
+                        <input type="number" id="reps-input" placeholder="e.g. 10">
+                    </div>
+                    <button id="log-set-btn" class="log-set-btn">Log Set <span id="current-set-display">1</span></button>
+                </div>
+            </div>
+            <button id="finish-workout-btn" class="finish-btn hidden-btn">
+                Finish & Save Workout
+            </button>
+        </section>
+        
+        <section id="history-view" class="hidden-view">
+            <h2>Logbook</h2>
+            <div id="workout-history-container">
+                <p class="loading-text">Loading past workouts...</p>
+            </div>
+        </section>
+
+        <section id="muscles-view" class="hidden-view">
+            <h1>Recovery Chart</h1>
+            <p>360° Body model goes here later.</p>
+        </section>
+
+        <section id="library-view" class="hidden-view">
+            <h2>Add New Machine</h2>
+            <div class="input-row">
+                <label>Muscle Group</label>
+                <select id="new-machine-muscle">
+                    <option value="chest">Chest</option>
+                    <option value="back">Back</option>
+                    <option value="legs">Legs</option>
+                    <option value="shoulders">Shoulders</option>
+                    <option value="arms">Biceps</option>
+                    <option value="arms">Triceps</option>
+                    <option value="core">Core</option>
+                </select>
+            </div>
+            <div class="input-row">
+                <label>Machine / Exercise Name</label>
+                <input type="text" id="new-machine-name" placeholder="e.g. Pec Deck Fly">
+            </div>
+            <button id="add-machine-btn" class="log-set-btn">Save to Library</button>
+        </section>
+    </main>
+
+    <nav class="bottom-navbar">
+        <button class="nav-btn active" data-target="workout-view">Workout</button>
+        <button class="nav-btn" data-target="history-view">History</button>
+        <button class="nav-btn" data-target="muscles-view">Muscles</button>
+        <button class="nav-btn" data-target="library-view">Library</button>
+    </nav>
+
+    <script src="app.js"></script>
+</body>
+</html>
