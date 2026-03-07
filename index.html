@@ -16,43 +16,42 @@
             
             <div class="selection-group">
                 <select id="muscle-select">
+                    <option value="core">Core</option>
                     <option value="chest">Chest</option>
                     <option value="back">Back</option>
                     <option value="legs">Legs</option>
                     <option value="shoulders">Shoulders</option>
                     <option value="arms">Biceps</option>
                     <option value="arms">Triceps</option>
-                    <option value="core">Core</option>
                 </select>
                 <select id="machine-select">
                     <option value="">Select Machine...</option>
                 </select>
             </div>
+            
+            <div id="set-tabs-container" class="set-tabs">
+                </div>
 
             <div class="sets-container">
-                <div class="set-tabs">
-                    <button class="set-tab active-set" data-set="1">1</button>
-                    <button class="set-tab" data-set="2">2</button>
-                    <button class="set-tab" data-set="3">3</button>
-                    <button class="set-tab" data-set="4">4</button>
-                    <button class="set-tab" data-set="5">5</button>
+                <div class="input-row">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="weight-input" placeholder="0">
                 </div>
-                
-                <div class="set-inputs">
-                    <div class="input-row">
-                        <label>Weight (kg)</label>
-                        <input type="number" id="weight-input" placeholder="e.g. 60">
-                    </div>
-                    <div class="input-row">
-                        <label>Reps</label>
-                        <input type="number" id="reps-input" placeholder="e.g. 10">
-                    </div>
-                    <button id="log-set-btn" class="log-set-btn">Log Set <span id="current-set-display">1</span></button>
+                <div class="input-row">
+                    <label>Reps</label>
+                    <input type="number" id="reps-input" placeholder="0">
                 </div>
+                <button id="log-set-btn" class="log-set-btn">Log Set 1</button>
             </div>
-            <button id="finish-workout-btn" class="finish-btn hidden-btn">
-                Finish & Save Workout
-            </button>
+
+            <div class="workout-actions">
+                <button id="next-exercise-btn" class="secondary-btn hidden-btn">
+                    Save & New Exercise
+                </button>
+                <button id="finish-workout-btn" class="finish-btn hidden-btn">
+                    Finish & Save Workout
+                </button>
+            </div>
         </section>
         
         <section id="history-view" class="hidden-view">

@@ -64,121 +64,167 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Logging Logic ---
     
     // 1. Create an empty array to hold the session data
-    let currentWorkoutSession = [];
 
-    // Grab the inputs and the button
-    const logSetBtn = document.getElementById('log-set-btn');
+    // --- Workout Logging & UI State ---
     const weightInput = document.getElementById('weight-input');
     const repsInput = document.getElementById('reps-input');
-    const muscleSelect = document.getElementById('muscle-select');
-    const machineSelect = document.getElementById('machine-select');
+    const logSetBtn = document.getElementById('log-set-btn');
+    const nextExerciseBtn = document.getElementById('next-exercise-btn');
+    const finishWorkoutBtn = document.getElementById('finish-workout-btn');
+    const setTabsContainer = document.getElementById('set-tabs-container');
 
+    // Load draft from local storage, or start fresh
+    let currentWorkoutSession = JSON.parse(localStorage.getItem('workoutDraft')) || [];
+    let currentSetNumber = 1;
+    let currentExerciseLogs = []; // Temporarily holds sets for the current machine
+
+    // Function to draw the set tabs
+    function renderSetTabs() {
+        setTabsContainer.innerHTML = ''; // Clear existing
+        
+        // Draw completed sets with green ticks
+        currentExerciseLogs.forEach((log, index) => {
+            const tab = document.createElement('button');
+            tab.className = 'set-tab completed';
+            tab.innerText = `Set ${index + 1} ✅`;
+            
+            // Allow clicking to view past numbers
+            tab.addEventListener('click', () => {
+                weightInput.value = log.weight;
+                repsInput.value = log.reps;
+                logSetBtn.innerText = `Update Set ${index + 1}`;
+                currentSetNumber = index + 1; // Put UI in "Edit Mode"
+            });
+            setTabsContainer.appendChild(tab);
+        });
+
+        // Draw the "Next Set" tab (if we aren't in edit mode)
+        if (currentSetNumber > currentExerciseLogs.length) {
+            const currentTab = document.createElement('button');
+            currentTab.className = 'set-tab active';
+            currentTab.innerText = `Set ${currentExerciseLogs.length + 1}`;
+            setTabsContainer.appendChild(currentTab);
+        }
+    }
+
+    // 1. Log a Set (or update an old one)
     logSetBtn.addEventListener('click', () => {
-        // 2. Read what is currently on the screen
-        const muscle = muscleSelect.value;
-        const machine = machineSelect.value;
         const weight = weightInput.value;
         const reps = repsInput.value;
-        const activeTab = document.querySelector('.set-tab.active-set');
-        const currentSet = activeTab.getAttribute('data-set');
+        const machine = machineSelect.value;
+        const muscle = muscleSelect.value;
 
-        // 3. Quick validation so you don't accidentally log blank sets
-        if (!muscle || !machine || !weight || !reps) {
-            alert("Fill out everything before logging the set, bro!");
+        if (!machine || !weight || !reps) {
+            alert("Please select a machine, weight, and reps.");
             return;
         }
 
-        // 4. Create a data object for this specific set
-        const loggedSet = {
-            muscle: muscle,
-            machine: machine,
-            set: parseInt(currentSet),
-            weight: parseFloat(weight),
-            reps: parseInt(reps),
-            time: new Date().toLocaleTimeString() // Just to see when you hit it
-        };
+        const setLog = { muscle, machine, set: currentSetNumber, weight, reps };
 
-        // 5. Push it to our temporary array
-        currentWorkoutSession.push(loggedSet);
+        // If editing a past set, replace it. Otherwise, add new.
+        if (currentSetNumber <= currentExerciseLogs.length) {
+            currentExerciseLogs[currentSetNumber - 1] = setLog;
+        } else {
+            currentExerciseLogs.push(setLog);
+        }
+
+        // Advance to the next set
+        currentSetNumber = currentExerciseLogs.length + 1;
         
-        // Print it to the browser console so you can see it working!
-        console.log("Workout Data:", currentWorkoutSession);
+        // Keep weight in the input, but clear reps for the next set
+        repsInput.value = '';
+        logSetBtn.innerText = `Log Set ${currentSetNumber}`;
+        
+        // Show the workout action buttons
+        nextExerciseBtn.classList.remove('hidden-btn');
+        finishWorkoutBtn.classList.remove('hidden-btn');
 
-        // 6. UI Magic: Clear inputs for the next set
+        renderSetTabs();
+    });
+
+    // 2. Save & Move to New Exercise
+    nextExerciseBtn.addEventListener('click', () => {
+        if (currentExerciseLogs.length === 0) return;
+
+        // Push all sets from this exercise into the global session
+        currentWorkoutSession = currentWorkoutSession.concat(currentExerciseLogs);
+        
+        // Backup to the phone's physical storage so no data is lost!
+        localStorage.setItem('workoutDraft', JSON.stringify(currentWorkoutSession));
+
+        // Reset the UI for the next exercise
+        currentExerciseLogs = [];
+        currentSetNumber = 1;
         weightInput.value = '';
         repsInput.value = '';
-
-        // 7. Auto-advance to the next tab (if you aren't on set 5)
-        const nextSetNum = parseInt(currentSet) + 1;
-        if (nextSetNum <= 5) {
-            const nextTab = document.querySelector(`.set-tab[data-set="${nextSetNum}"]`);
-            if (nextTab) {
-                nextTab.click(); // Simulates you tapping the next number
-            }
-        } else {
-            alert("All 5 sets logged! Time for the next machine.");
-        }
+        machineSelect.value = '';
+        logSetBtn.innerText = `Log Set 1`;
+        
+        renderSetTabs();
+        alert("Exercise saved to draft. Select a new machine!");
     });
 
-    // --- Finish Workout & Save to Database ---
-    const finishWorkoutBtn = document.getElementById('finish-workout-btn');
-
-    // Update your existing logSetBtn listener to unhide the finish button
-    logSetBtn.addEventListener('click', () => {
-        // ... (Keep all your existing logging code here) ...
-
-        // Unhide the Finish button once the first set is logged
-        if (currentWorkoutSession.length > 0) {
-            finishWorkoutBtn.classList.remove('hidden-btn');
-        }
-    });
-
-    // The actual POST request to your backend
+    // 3. Finish & Save Entire Workout to MongoDB
     finishWorkoutBtn.addEventListener('click', async () => {
-        if (currentWorkoutSession.length === 0) {
+        // Grab any sets currently on the screen that haven't been pushed to the session yet
+        let finalSession = [...currentWorkoutSession];
+        if (currentExerciseLogs.length > 0) {
+            finalSession = finalSession.concat(currentExerciseLogs);
+        }
+
+        if (finalSession.length === 0) {
             alert("You haven't logged any sets yet!");
             return;
         }
 
-        // Change button text so you know it's working
-        finishWorkoutBtn.innerText = "Saving to Database...";
+        finishWorkoutBtn.innerText = "Saving to Server...";
         finishWorkoutBtn.disabled = true;
 
         try {
-            // Send the data to your Node.js server
             const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/save-workout', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                // We wrap your array in an object so req.body.logs works on the backend
-                body: JSON.stringify({ logs: currentWorkoutSession }) 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logs: finalSession })
             });
 
-            if (response.ok) {
-                alert("Workout completely saved to MongoDB!");
-                
-                // Reset the frontend for the next workout
-                currentWorkoutSession = [];
-                finishWorkoutBtn.classList.add('hidden-btn');
-                finishWorkoutBtn.innerText = "Finish & Save Workout";
-                finishWorkoutBtn.disabled = false;
-                
-                // Optional: Automatically switch to the History tab
-                document.querySelector('.nav-btn[data-target="history-view"]').click();
-            } else {
-                throw new Error("Server responded with an error");
-            }
+            if (!response.ok) throw new Error("Server error");
 
+            alert("Workout completely saved to cloud!");
+            
+            // WIPE EVERYTHING CLEAN
+            currentWorkoutSession = [];
+            currentExerciseLogs = [];
+            currentSetNumber = 1;
+            localStorage.removeItem('workoutDraft'); // Clear phone backup
+            
+            // Reset UI
+            weightInput.value = '';
+            repsInput.value = '';
+            machineSelect.value = '';
+            logSetBtn.innerText = `Log Set 1`;
+            finishWorkoutBtn.classList.add('hidden-btn');
+            nextExerciseBtn.classList.add('hidden-btn');
+            finishWorkoutBtn.innerText = "Finish & Save Workout";
+            finishWorkoutBtn.disabled = false;
+            
+            renderSetTabs();
+            
+            // Switch to History tab
+            document.querySelector('.nav-btn[data-target="history-view"]').click();
+            
         } catch (error) {
             console.error("Error saving workout:", error);
-            alert("Failed to save workout. Is your Node server running?");
-            
-            // Reset button if it fails
+            alert("Failed to save to cloud. Don't worry, your workout is safely backed up on your phone.");
             finishWorkoutBtn.innerText = "Finish & Save Workout";
             finishWorkoutBtn.disabled = false;
         }
     });
+
+    // Run this once when the app opens to check for an interrupted workout
+    if (currentWorkoutSession.length > 0) {
+        finishWorkoutBtn.classList.remove('hidden-btn');
+        nextExerciseBtn.classList.remove('hidden-btn');
+    }
 
     // --- Load History Logic ---
     const historyContainer = document.getElementById('workout-history-container');
@@ -214,12 +260,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <ul class="history-logs">
                 `;
 
-                session.logs.forEach(log => {
+                session.logs.forEach((log, logIndex) => {
                     const cleanMachineName = log.machine.replace('_', ' '); 
                     cardHTML += `
-                        <li>
-                            <span class="machine-name">${cleanMachineName} (Set ${log.set})</span>
-                            <span>${log.weight}kg x ${log.reps}</span>
+                        <li class="history-log-item">
+                            <div class="log-details">
+                                <span class="machine-name">${cleanMachineName} (Set ${log.set})</span>
+                                <span>${log.weight}kg x ${log.reps}</span>
+                            </div>
+                            <button class="delete-log-btn" data-session-id="${session._id}" data-log-index="${logIndex}" title="Delete this exercise">✕</button>
                         </li>
                     `;
                 });
@@ -233,11 +282,48 @@ document.addEventListener('DOMContentLoaded', () => {
             // Auto-retry in 5 seconds if it fails
             setTimeout(loadHistory, 5000);
         }
+
+        // Add delete event listeners to all delete buttons
+        const deleteButtons = document.querySelectorAll('.delete-log-btn');
+        deleteButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                
+                const sessionId = btn.getAttribute('data-session-id');
+                const logIndex = parseInt(btn.getAttribute('data-log-index'), 10);
+
+                if (!confirm("Are you sure you want to delete this exercise?")) {
+                    return;
+                }
+
+                try {
+                    console.log("Deleting - sessionId:", sessionId, "logIndex:", logIndex);
+                    
+                    const response = await fetch('https://gym-bot-backend-f5t8.onrender.com/api/delete-exercise', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sessionId, logIndex })
+                    });
+
+                    const responseData = await response.json();
+                    console.log("Delete response:", responseData);
+
+                    if (!response.ok) throw new Error(responseData.error || "Failed to delete");
+
+                    alert("Exercise deleted!");
+                    await fetch('https://gym-bot-backend-f5t8.onrender.com/api/health');
+                    loadHistory(); // Refresh the history
+                } catch (error) {
+                    console.error("Error deleting exercise:", error);
+                    alert("Failed to delete exercise: " + error.message);
+                }
+            });
+        });
     }
 
     // --- Library & Dynamic Dropdowns Logic ---
-    // const machineSelect = document.getElementById('machine-select');
-    // const muscleSelect = document.getElementById('muscle-select'); // Ensure this is selected at the top of your file
+    const machineSelect = document.getElementById('machine-select');
+    const muscleSelect = document.getElementById('muscle-select');
     
     let allExercises = [];
 
