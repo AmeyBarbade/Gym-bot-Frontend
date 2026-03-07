@@ -1,10 +1,10 @@
-const CACHE_NAME = 'gym-bot-v3'; // Bumped to v3 to force an update
+const CACHE_NAME = 'gym-bot-v4'; // Bumped version to force cache clear
 const ASSETS = [
     '/',
     '/index.html',
     '/style.css',
-    '/app.js',
     '/manifest.json'
+    // NOTE: app.js NOT cached - it will always fetch fresh
 ];
 
 // 1. Install & Force Update
@@ -27,11 +27,18 @@ self.addEventListener('activate', event => {
             }));
         })
     );
+    self.clients.claim(); // Claim all clients immediately
 });
 
 // 3. Intercept Fetch Requests
 self.addEventListener('fetch', event => {
-    // 🔥 STRICT RULE: NEVER cache anything from your Render API!
+    // 🔥 NEVER cache app.js - always fetch fresh for latest code
+    if (event.request.url.includes('app.js')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
+    // 🔥 NEVER cache anything from your Render API!
     if (event.request.url.includes('onrender.com') || event.request.url.includes('/api/')) {
         event.respondWith(fetch(event.request)); // Go straight to the internet
         return;
