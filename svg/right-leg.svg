@@ -1,0 +1,14 @@
+<svg width="100" height="800" viewBox="0 0 100 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Upper thigh -->
+  <path d="M55 0L80 0L70 200L50 200Z" fill="#D9D9D9" stroke="#999" stroke-width="0.5"/>
+  <!-- Mid thigh -->
+  <path d="M50 200L70 200L60 380L45 380Z" fill="#D9D9D9" stroke="#999" stroke-width="0.5"/>
+  <!-- Lower thigh -->
+  <path d="M45 380L60 380L55 480L50 480Z" fill="#D9D9D9" stroke="#999" stroke-width="0.5"/>
+  <!-- Upper calf -->
+  <path d="M50 480L55 480L53 580L47 580Z" fill="#D9D9D9" stroke="#999" stroke-width="0.5"/>
+  <!-- Lower calf -->
+  <path d="M47 580L53 580L51 680L49 680Z" fill="#D9D9D9" stroke="#999" stroke-width="0.5"/>
+  <!-- Ankle -->
+  <path d="M49 680L51 680L50 720L50 720Z" fill="#D9D9D9" stroke="#999" stroke-width="0.5"/>
+</svg>
